@@ -9,7 +9,6 @@ st.title("🔍 Multisource Anomaly Detection Dashboard")
 
 col1, col2 = st.columns(2)
 
-# --- DeepTraLog (col1) ---
 with col1:
     st.header("Graph (GGNN + Deep SVDD)")
     uploaded_file = st.file_uploader("Uploader un fichier .jsons de graphe", type=["json", "jsons"], key="file_graph")
@@ -43,7 +42,6 @@ with col1:
             else:
                 st.success("✅ Pas d'anomalies détectées dans ce graphe.")
 
-# --- XGBoost Metrics (col2) ---
 with col2:
     st.header("Metric System")
     csv_file = st.file_uploader("Uploader un fichier CSV séries temporelles (timestamp + métriques)", type="csv", key="file_metric")

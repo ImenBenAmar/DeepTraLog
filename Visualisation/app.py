@@ -33,7 +33,6 @@ event_embeddings = np.load('../models/event_embeddings (1).npy', allow_pickle=Tr
 id_service_df = pd.read_csv('../DeepTralog/id_service.csv', header=None, names=['ServiceId', 'Service'])
 service_mapping = dict(zip(id_service_df['ServiceId'], id_service_df['Service']))
 
-# Charger le scaler sauvegardé
 scaler = joblib.load('../models/scaler.pkl')  # Modifie ce chemin si nécessaire
 
 def process_json_graph(data_json):
@@ -44,30 +43,27 @@ def process_json_graph(data_json):
     template_ids = node_info[:, 0].astype(int)
     service_ids = node_info[:, 1].astype(int)
 
-    # Prendre uniquement les 6 features numériques (colonnes 2 à 7)
     numerical_features = node_info[:, 1:]
     numerical_features = scaler.transform(numerical_features)
 
-    # Générer les embeddings pour chaque template_id
     event_embs = np.array([
         event_embeddings.get(template_id, np.zeros(300, dtype=np.float32))
         for template_id in template_ids
     ])
 
-    # Concaténer features normalisées + embeddings
     node_features = np.hstack([numerical_features, event_embs])
     node_features = torch.tensor(node_features, dtype=torch.float)
 
     graph = Data(x=node_features, edge_index=edge_index, edge_attr=edge_attr).to(device)
-    return graph, int(service_ids[0])  # service_id du premier noeud
+    return graph, int(service_ids[0])  
 
 
 @app.route('/detect_anomaly', methods=['POST'])
 def detect_anomaly():
     try:
-        data_list = request.json  # Attendu : liste de graphes JSON
+        data_list = request.json  
         if not isinstance(data_list, list):
-            data_list = [data_list]  # Gérer le cas d'un seul graphe
+            data_list = [data_list]  
 
         results = []
         graphs = []
@@ -103,16 +99,14 @@ def detect_anomaly():
         return jsonify({"error": str(e)}), 500
 
 
-# Charger le modèle
 xgb_model = joblib.load("../models/XG_metric_detector.pkl")
 
-# Charger les données d’entraînement pour fit le scaler
-df_train = pd.read_csv("../Dataset_SMD/machine-1-1_train_filtered.csv")  # <-- adapter le chemin
+df_train = pd.read_csv("../Dataset_SMD/machine-1-1_train_filtered.csv")  
 feature_names = ['cpu_r', 'load_1', 'load_5', 'mem_u', 'disk_q', 'disk_r',
                  'disk_w', 'disk_u', 'eth1_fi', 'eth1_fo', 'tcp_timeouts']
 X_train = df_train[feature_names]
 
-# Créer et ajuster le scaler une seule fois
+
 scaler_xG = MinMaxScaler()
 scaler_xG.fit(X_train)
 
@@ -151,7 +145,6 @@ def batch_detect_xgb_anomaly():
         records = data["data"]
         df_input = pd.DataFrame(records)
 
-        # Vérifier si les colonnes sont complètes
         if not all(f in df_input.columns for f in feature_names):
             return jsonify({"error": f"Some features are missing. Required: {feature_names}"}), 400
 
