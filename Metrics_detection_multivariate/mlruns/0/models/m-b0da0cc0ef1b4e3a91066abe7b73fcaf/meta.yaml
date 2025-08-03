@@ -1,0 +1,10 @@
+artifact_location: file:///d:/imen/mlruns/0/models/m-b0da0cc0ef1b4e3a91066abe7b73fcaf/artifacts
+creation_timestamp: 1754064722122
+experiment_id: '0'
+last_updated_timestamp: 1754064726429
+model_id: m-b0da0cc0ef1b4e3a91066abe7b73fcaf
+model_type: null
+name: ZScoreThresholding
+source_run_id: c11964d300e247d1ba6345cd03ece603
+status: 2
+status_message: null

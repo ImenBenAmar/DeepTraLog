@@ -1,0 +1,10 @@
+artifact_location: file:///d:/imen/mlruns/0/models/m-4e9468401950477186f86022dcaa2640/artifacts
+creation_timestamp: 1754071239597
+experiment_id: '0'
+last_updated_timestamp: 1754071250445
+model_id: m-4e9468401950477186f86022dcaa2640
+model_type: null
+name: model LSTMAE
+source_run_id: 3aab0bc170764e378a03a9a83bab4e7d
+status: 2
+status_message: null

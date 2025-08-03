@@ -1,0 +1,10 @@
+artifact_location: file:///d:/imen/mlruns/0/models/m-164e4b83d09b413c8a6ebe932605a4cd/artifacts
+creation_timestamp: 1754063365311
+experiment_id: '0'
+last_updated_timestamp: 1754063370278
+model_id: m-164e4b83d09b413c8a6ebe932605a4cd
+model_type: null
+name: IsolationForest
+source_run_id: ee3ec6985ca0440797f576e054988f41
+status: 2
+status_message: null

@@ -1,0 +1,14 @@
+artifact_uri: file:///d:/imen/mlruns/0/332f51f96fef4ab7a4cdbaab83b7b6ea/artifacts
+end_time: 1754067147292
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 332f51f96fef4ab7a4cdbaab83b7b6ea
+run_name: XGBoostClassifier
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754067142236
+status: 3
+tags: []
+user_id: pc

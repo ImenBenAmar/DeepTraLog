@@ -1,0 +1,14 @@
+artifact_uri: file:///d:/imen/mlruns/0/46e0b82a41b247038a683399d4bbf881/artifacts
+end_time: 1754070593898
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 46e0b82a41b247038a683399d4bbf881
+run_name: LSTM_AnomalyDetector
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754070593830
+status: 4
+tags: []
+user_id: pc

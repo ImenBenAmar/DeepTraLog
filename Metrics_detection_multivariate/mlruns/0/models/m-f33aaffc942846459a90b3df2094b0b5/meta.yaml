@@ -1,0 +1,10 @@
+artifact_location: file:///d:/imen/mlruns/0/models/m-f33aaffc942846459a90b3df2094b0b5/artifacts
+creation_timestamp: 1754076011963
+experiment_id: '0'
+last_updated_timestamp: 1754076021791
+model_id: m-f33aaffc942846459a90b3df2094b0b5
+model_type: null
+name: model OmniLiteImproved
+source_run_id: 3aab0bc170764e378a03a9a83bab4e7d
+status: 2
+status_message: null

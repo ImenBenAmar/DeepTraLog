@@ -1,0 +1,10 @@
+artifact_location: file:///d:/imen/mlruns/0/models/m-a8dea429f77d4869aafa9198944eb495/artifacts
+creation_timestamp: 1754067142372
+experiment_id: '0'
+last_updated_timestamp: 1754067147109
+model_id: m-a8dea429f77d4869aafa9198944eb495
+model_type: null
+name: XGBoostClassifier
+source_run_id: 332f51f96fef4ab7a4cdbaab83b7b6ea
+status: 2
+status_message: null

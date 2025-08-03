@@ -1,0 +1,10 @@
+artifact_location: file:///d:/imen/mlruns/0/models/m-0df2074800af41d7aabb83f21d125fe2/artifacts
+creation_timestamp: 1754066854164
+experiment_id: '0'
+last_updated_timestamp: 1754066858764
+model_id: m-0df2074800af41d7aabb83f21d125fe2
+model_type: null
+name: RandomForestClassifier
+source_run_id: dac86a51fe834c118706c60600abebb5
+status: 2
+status_message: null

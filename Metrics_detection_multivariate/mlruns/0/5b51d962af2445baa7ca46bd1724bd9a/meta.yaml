@@ -1,0 +1,14 @@
+artifact_uri: file:///d:/imen/mlruns/0/5b51d962af2445baa7ca46bd1724bd9a/artifacts
+end_time: 1754065669921
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 5b51d962af2445baa7ca46bd1724bd9a
+run_name: ZScoreThresholding
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754065665478
+status: 3
+tags: []
+user_id: pc

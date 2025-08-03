@@ -1,0 +1,14 @@
+artifact_uri: file:///d:/imen/mlruns/0/c15481d099b14813add2bc8ee6790f5e/artifacts
+end_time: 1754226049783
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: c15481d099b14813add2bc8ee6790f5e
+run_name: unique-turtle-568
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754226029882
+status: 3
+tags: []
+user_id: pc

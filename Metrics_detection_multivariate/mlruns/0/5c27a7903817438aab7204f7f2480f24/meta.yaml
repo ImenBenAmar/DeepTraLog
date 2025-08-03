@@ -1,0 +1,14 @@
+artifact_uri: file:///d:/imen/mlruns/0/5c27a7903817438aab7204f7f2480f24/artifacts
+end_time: 1754063348263
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 5c27a7903817438aab7204f7f2480f24
+run_name: IsolationForest
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754063343183
+status: 3
+tags: []
+user_id: pc

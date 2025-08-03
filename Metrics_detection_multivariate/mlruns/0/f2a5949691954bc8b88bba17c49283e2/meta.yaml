@@ -1,0 +1,14 @@
+artifact_uri: file:///d:/imen/mlruns/0/f2a5949691954bc8b88bba17c49283e2/artifacts
+end_time: 1754069193354
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: f2a5949691954bc8b88bba17c49283e2
+run_name: AutoEncoder_GridSearch
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754069172619
+status: 3
+tags: []
+user_id: pc

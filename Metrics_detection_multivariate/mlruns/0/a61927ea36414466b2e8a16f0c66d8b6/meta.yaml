@@ -1,0 +1,14 @@
+artifact_uri: file:///d:/imen/mlruns/0/a61927ea36414466b2e8a16f0c66d8b6/artifacts
+end_time: 1754066565956
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: a61927ea36414466b2e8a16f0c66d8b6
+run_name: IQRThresholding
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754066562347
+status: 3
+tags: []
+user_id: pc

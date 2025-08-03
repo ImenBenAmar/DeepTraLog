@@ -1,0 +1,14 @@
+artifact_uri: file:///d:/imen/mlruns/0/3aab0bc170764e378a03a9a83bab4e7d/artifacts
+end_time: null
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 3aab0bc170764e378a03a9a83bab4e7d
+run_name: dapper-gull-711
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754071163204
+status: 1
+tags: []
+user_id: pc

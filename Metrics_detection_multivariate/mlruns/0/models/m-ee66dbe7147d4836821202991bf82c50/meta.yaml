@@ -1,0 +1,10 @@
+artifact_location: file:///d:/imen/mlruns/0/models/m-ee66dbe7147d4836821202991bf82c50/artifacts
+creation_timestamp: 1754066562449
+experiment_id: '0'
+last_updated_timestamp: 1754066565754
+model_id: m-ee66dbe7147d4836821202991bf82c50
+model_type: null
+name: IQRThresholding
+source_run_id: a61927ea36414466b2e8a16f0c66d8b6
+status: 2
+status_message: null

@@ -1,0 +1,14 @@
+artifact_uri: file:///d:/imen/mlruns/0/d3bd0a95cbab4fb18a5301b32eef701b/artifacts
+end_time: 1754068773838
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: d3bd0a95cbab4fb18a5301b32eef701b
+run_name: AutoEncoder
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754068773753
+status: 4
+tags: []
+user_id: pc
