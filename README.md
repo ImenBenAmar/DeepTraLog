@@ -20,11 +20,16 @@ Ce dépôt propose un pipeline complet pour la détection d'anomalies et l'analy
 │   ├── eda-graphdata.ipynb              # Analyse exploratoire des graphes générés (EDA, statistiques, visualisations)
 │   └── model-training.ipynb             # Entraînement et évaluation du modèle DeepTraLog (GGNN, DeepSVDD, métriques)
 │
-├── models/                              # Modèles entraînés, checkpoints, configurations
+├── Visualisation/
+│   ├── app_streamlit.py         # Interface utilisateur Streamlit
+│   ├── app.py                  # API Flask pour l'inférence et l'explication
 │
+├── models/                     # Modèles entraînés, checkpoints, embeddings, scaler, etc.
+│
+├── demo.mp4                    # Vidéo de démonstration de l'interface
+├── output.png                  # Exemple de graphe généré (prétraitement DeepTraLog)
 ├── DeepTraLog architecture.pdf          # Schéma d'architecture du modèle DeepTraLog
 ├── metric_anomaly.pdf                   # Présentation sur la détection d'anomalies sur métriques
-├── output.png                           # Exemple de sortie ou visualisation
 ├── README.md                            # Documentation du projet
 ```
 
@@ -81,6 +86,45 @@ Ce dépôt propose un pipeline complet pour la détection d'anomalies et l'analy
 
 ---
 
+## 🚀 Lancer la détection d'anomalies (Interface & API)
+
+### 1. **API Flask (détection & explication LLM)**
+
+L'API Flask (`Visualisation/app.py`) sert à :
+- Charger le modèle GGNN+DeepSVDD et le modèle XGBoost métrique.
+- Prendre en entrée des graphes (JSONS) et des métriques (CSV).
+- Retourner les anomalies détectées, avec score, visualisation et explication générée par LLM (Mistral).
+
+**Lancement :**
+```bash
+cd Visualisation
+python app.py
+```
+L'API écoute sur `http://127.0.0.1:5000`.
+
+### 2. **Interface utilisateur Streamlit**
+
+L'interface Streamlit (`Visualisation/app_streamlit.py`) permet de :
+- Charger vos fichiers JSONS (graphes) et CSV (métriques).
+- Lancer la détection via l'API Flask.
+- Visualiser les anomalies détectées, les scores, les graphiques et les explications/recommandations générées par LLM.
+
+**Lancement :**
+```bash
+streamlit run Visualisation/app_streamlit.py
+```
+Ouvrez ensuite le lien local affiché dans votre navigateur.
+
+---
+
+## 🤖 Explication automatique par LLM
+
+Pour chaque anomalie détectée, une explication détaillée et une recommandation technique sont générées automatiquement par un LLM (Mistral) via l'API.  
+- Le prompt inclut le service, les scores, les métriques système, et demande une cause probable + une action corrective concrète.
+- Le LLM utilisé est `mistral-medium` (clé API à renseigner dans `.env`).
+
+---
+
 ## 📊 Résultats obtenus
 
 Quelques scores typiques obtenus sur les jeux de données testés :
@@ -92,26 +136,65 @@ Quelques scores typiques obtenus sur les jeux de données testés :
   - AUC : ~0.77
 
 - **Détection multivariée (metrics-anomaly.ipynb) :**
-  - Isolation Forest : Precision: 0.3466 Recall: 0.7108 F1-score: 0.4660
-  - Z_score: Precision: 0.6472 Recall: 0.7866  F1-score: 0.7101
-  - Autoencoder dense : Precision: 0.5671 Recall: 0.5995 F1-score: 0.5828
-  - LSTM : Precision: 0.7617 Recall: 0.7249 F1-score: 0.7429
-  - OmniAI : F1-score: 0.7430 Recall: 0.7335 Precision: 0.7528 AUC: 0.9519
+  - Isolation Forest : Precision: 0.35 Recall: 0.71 F1-score: 0.47
+  - Z_score: Precision: 0.65 Recall: 0.79  F1-score: 0.71
+  - Autoencoder dense : Precision: 0.57 Recall: 0.60 F1-score: 0.58
+  - LSTM : Precision: 0.76 Recall: 0.72 F1-score: 0.74
+  - OmniAI : F1-score: 0.74 Recall: 0.73 Precision: 0.75 AUC: 0.95
   - XGBoost (supervisé) : Precision: 0.90 Recall: 0.97 F1-score: 0.93
   - Random Forest: Précision : 0.98 Rappel : 0.95 F1-score : 0.97
 
 - **DeepTraLog (GGNN + DeepSVDD sur graphes logs+traces) :**
-   -precsion 0.968
-   -Recall: 0.673, 
-   -F1-Score: 0.794 
-   -AUC: 0.822
-  - Matrice de confusion, courbes ROC et distributions des scores d'anomalie disponibles dans le notebook.
+   - Précision : 0.968
+   - Recall: 0.673
+   - F1-Score: 0.794 
+   - AUC: 0.822
 
 > Les résultats peuvent varier selon le dataset, le split et les hyperparamètres. Voir chaque notebook pour les détails et visualisations.
 
 ---
 
-## 🚀 Utilisation des notebooks et modèles
+## 🛠️ Outils et requirements
+
+### Outils principaux utilisés
+
+- **Python 3.8+**
+- **PyTorch**, **torch-geometric** (modèles graphes)
+- **scikit-learn**, **xgboost** (modèles ML classiques)
+- **TensorFlow/Keras** (autoencoders, LSTM)
+- **Streamlit** (interface utilisateur)
+- **Flask** (API backend)
+- **MLflow** (tracking et comparaison des modèles)
+- **MistralAI** (LLM pour explication automatique)
+- **pandas**, **numpy**, **matplotlib**, **seaborn**, **plotly** (data science/visualisation)
+
+### Installation des dépendances
+
+```bash
+pip install -r requirements.txt
+```
+---
+
+## 🖼️ Démo & Visualisations
+
+### 🎬 Démonstration vidéo
+
+- [Voir la démo (demo.mp4)](demo.mp4)
+
+### 📈 Exemples de visualisation
+
+- ![Exemple de graphe DeepTraLog (output.png)](DeepTralog\output.png)  
+  *Graphe orienté généré lors du prétraitement DeepTraLog (logs + traces fusionnés, typage des arêtes, couleurs par service).*
+
+- ![Exemple interface Streamlit](./Visualisation/image.png)  
+  *Interface utilisateur pour l'analyse et l'explication des anomalies.*
+
+- ![Exemple MLflow résultats](./Metrics_detection_multivariate/image.png)  
+  *Suivi des scores et modèles via MLflow.*
+
+---
+
+## 🚦 Utilisation des notebooks et modèles
 
 1. **Prétraitement et parsing :**
    - Exécuter `DeepTralog/deeptralog_preprocesing.ipynb` pour parser les logs/traces, fusionner, générer les embeddings et exporter les graphes au format DeepTraLog.
@@ -135,6 +218,6 @@ Quelques scores typiques obtenus sur les jeux de données testés :
 
 - Article original : [Trace-Log Combined Microservice Anomaly Detection through Graph-based Deep Learning (ICSE 2022)](https://cspengxin.github.io/publications/icse22-DeepTraLog.pdf)
 - Données : [DeepTraLog Dataset (GitHub)](https://github.com/FudanSELab/DeepTraLog)
-- Dataset Multivariée pour les metriques (CPU,..) : [SMD dataset (GitHub)] : (https://github.com/snareli/Server-Machine-Dataset)
+- Dataset Multivariée pour les metriques (CPU,..) : [SMD dataset (GitHub)](https://github.com/snareli/Server-Machine-Dataset)
 
 ---

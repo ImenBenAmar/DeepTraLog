@@ -1,0 +1,17 @@
+torch
+torch-geometric
+scikit-learn
+xgboost
+tensorflow
+keras
+streamlit
+flask
+mlflow
+mistralai
+pandas
+numpy
+matplotlib
+seaborn
+plotly
+tqdm
+python-dotenv
