@@ -7,15 +7,24 @@ import base64
 import matplotlib.pyplot as plt
 from io import BytesIO
 from torch_geometric.data import Data, Batch
-from model_definitions import GGNN  # Assure-toi que la classe est bien définie ici
+from model_definitions import GGNN
 from sklearn.preprocessing import MinMaxScaler
-
+import subprocess
 import gc
+import os
+from dotenv import load_dotenv
+from mistralai import Mistral  # Updated import to use Mistral client
+
+# Charger les variables d’environnement (.env)
+load_dotenv()
+mistral_api_key = os.getenv("MISTRAL_API_KEY")
+print("MISTRAL_API_KEY =", repr(mistral_api_key))
+
+mistral_client = Mistral(api_key=mistral_api_key) 
 gc.collect()
 torch.cuda.empty_cache()
 
 app = Flask(__name__)
-
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 checkpoint = torch.load('../models/ggnn_Deep_svdd .pth', map_location='cpu')
@@ -33,22 +42,17 @@ scaler = joblib.load('../models/scaler.pkl')
 scaler_xG = MinMaxScaler()
 xgb_model = joblib.load("../models/XG_metric_detector.pkl")
 
-
 feature_names = ['cpu_r', 'load_1', 'load_5', 'mem_u', 'disk_q', 'disk_r',
                  'disk_w', 'disk_u', 'eth1_fi', 'eth1_fo', 'tcp_timeouts']
 df_train = pd.read_csv("../Dataset_SMD/machine-1-1_train_filtered.csv")
 scaler_xG.fit(df_train[feature_names])
 
-#process_graph
-
 def process_json_graph(data_json):
     edge_index = torch.tensor(data_json['edge_index'], dtype=torch.long).t().contiguous()
     edge_attr = torch.tensor(data_json['edge_attr'], dtype=torch.long)
-
     node_info = np.array(data_json['node_info'], dtype=np.float32)
     template_ids = node_info[:, 0].astype(int)
     service_ids = node_info[:, 1].astype(int)
-
     numerical_features = node_info[:, 1:]
     numerical_features = scaler.transform(numerical_features)
 
@@ -63,7 +67,31 @@ def process_json_graph(data_json):
     graph = Data(x=node_features, edge_index=edge_index, edge_attr=edge_attr).to(device)
     return graph, int(service_ids[0])
 
-# Multimodalité
+def generate_llm_explanation(timestamp, service_name, score_trace, score_metric, fused_score, metrics_row):
+    prompt = f"""
+Voici une anomalie détectée dans un système microservices sachant que Score trace > 0 est considére comme une anomalie et score métrique proche de 1 est considéré comme une anomalie  :
+
+- Timestamp : {timestamp}
+- Service concerné : {service_name}
+- Score trace : {score_trace:.4f}
+- Score métrique : {score_metric:.4f}
+- Score fusionné : {fused_score:.4f}
+- Valeurs des métriques système : {metrics_row.to_dict()}
+
+Donne une explication probable de la cause de l’anomalie et propose une recommandation technique concrète pour la corriger directement .
+    """
+
+    response = mistral_client.chat.complete(
+        model="mistral-medium",  
+        messages=[
+            {"role": "system", "content": "Tu es un assistant DevOps expert en surveillance de systèmes distribués."},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.3,
+        max_tokens=600
+    )
+
+    return response.choices[0].message.content.strip()
 
 @app.route('/detect_fused_anomaly', methods=['POST'])
 def detect_fused_anomaly():
@@ -124,6 +152,7 @@ def detect_fused_anomaly():
 
             if label_fused == 1:
                 ts = timestamps[i]
+                row = metrics_data.loc[ts] if ts in metrics_data.index else metrics_data.iloc[0]
 
                 fig, ax = plt.subplots(figsize=(10, 4))
                 for col in feature_names:
@@ -141,6 +170,15 @@ def detect_fused_anomaly():
                 img_base64 = base64.b64encode(buf.read()).decode('utf-8')
                 plt.close()
 
+                explanation = generate_llm_explanation(
+                    timestamp=ts,
+                    service_name=service_mapping.get(service_ids[i], f"unknown_{service_ids[i]}"),
+                    score_trace=score_trace,
+                    score_metric=score_metric,
+                    fused_score=fused_score,
+                    metrics_row=row[feature_names]
+                )
+
                 results.append({
                     "timestamp": int(ts.timestamp()),
                     "trace_id": trace_id,
@@ -148,15 +186,14 @@ def detect_fused_anomaly():
                     "score_trace": score_trace,
                     "score_metric": score_metric,
                     "fused_score": fused_score,
-                    "plot_base64": img_base64
+                    "plot_base64": img_base64,
+                    "explanation": explanation
                 })
 
         return jsonify({"anomalies": results})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-# app
 
 if __name__ == '__main__':
     app.run(debug=True)
