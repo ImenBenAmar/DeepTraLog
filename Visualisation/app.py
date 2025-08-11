@@ -9,20 +9,27 @@ from io import BytesIO
 from torch_geometric.data import Data, Batch
 from model_definitions import GGNN
 from sklearn.preprocessing import MinMaxScaler
-import subprocess
 import gc
 import os
 from dotenv import load_dotenv
-from mistralai import Mistral  # Updated import to use Mistral client
+from mistralai import Mistral
+from chronos import ChronosPipeline
 
-# Charger les variables d’environnement (.env)
+# Charger Chronos-T5 small
+pipeline = ChronosPipeline.from_pretrained(
+    "amazon/chronos-t5-small",
+    device_map="cpu",
+    torch_dtype=torch.float32,
+)
+
+def generate_forecast_with_chronos(metric_series, horizon=10):
+    context = torch.tensor(metric_series.values, dtype=torch.float32)
+    forecast = pipeline.predict(context, prediction_length=horizon)
+    return forecast[0, 0, :].tolist()
+
 load_dotenv()
 mistral_api_key = os.getenv("MISTRAL_API_KEY")
-print("MISTRAL_API_KEY =", repr(mistral_api_key))
-
-mistral_client = Mistral(api_key=mistral_api_key) 
-gc.collect()
-torch.cuda.empty_cache()
+mistral_client = Mistral(api_key=mistral_api_key)
 
 app = Flask(__name__)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -78,11 +85,11 @@ Voici une anomalie détectée dans un système microservices sachant que Score t
 - Score fusionné : {fused_score:.4f}
 - Valeurs des métriques système : {metrics_row.to_dict()}
 
-Donne une explication probable de la cause de l’anomalie et propose une recommandation technique concrète pour la corriger directement .
+Donne une explication probable de la cause de l’anomalie et propose une recommandation technique concrète pour la corriger directement tous ca dans 2 paragraphe ne depasse pas 600 mots  .
     """
 
     response = mistral_client.chat.complete(
-        model="mistral-medium",  
+        model="mistral-medium",
         messages=[
             {"role": "system", "content": "Tu es un assistant DevOps expert en surveillance de systèmes distribués."},
             {"role": "user", "content": prompt}
@@ -90,7 +97,6 @@ Donne une explication probable de la cause de l’anomalie et propose une recomm
         temperature=0.3,
         max_tokens=600
     )
-
     return response.choices[0].message.content.strip()
 
 @app.route('/detect_fused_anomaly', methods=['POST'])
@@ -106,6 +112,10 @@ def detect_fused_anomaly():
 
         if not all(f in metrics_data.columns for f in ["timestamp"] + feature_names):
             return jsonify({"error": "Missing required columns in metrics_data"}), 400
+
+        metric_to_forecast = req_data.get("metric_to_forecast", "cpu_r")
+        if metric_to_forecast not in feature_names:
+            return jsonify({"error": f"metric_to_forecast '{metric_to_forecast}' not valid"}), 400
 
         metrics_data["timestamp"] = pd.to_datetime(metrics_data["timestamp"], unit='s')
         metrics_data = metrics_data.sort_values("timestamp").set_index("timestamp")
@@ -154,21 +164,44 @@ def detect_fused_anomaly():
                 ts = timestamps[i]
                 row = metrics_data.loc[ts] if ts in metrics_data.index else metrics_data.iloc[0]
 
-                fig, ax = plt.subplots(figsize=(10, 4))
+                # Prévision
+                historical_data = metrics_data[metric_to_forecast].loc[:ts].tail(50)
+                forecast_values = generate_forecast_with_chronos(historical_data, horizon=10)
+
+                # Plot principal (toutes métriques + anomalie)
+                fig_main, ax_main = plt.subplots(figsize=(10, 4))
                 for col in feature_names:
-                    ax.plot(metrics_data.index, metrics_data[col], alpha=0.3, label=col)
-                ax.axvline(ts, color='red', linestyle='--', label='Anomaly')
+                    ax_main.plot(metrics_data.index, metrics_data[col], alpha=0.3, label=col)
+                ax_main.axvline(ts, color='red', linestyle='--', label='Anomaly')
+                ax_main.set_title(f"Anomaly at {ts} - Trace {trace_id}")
+                ax_main.legend(loc='upper right')
+                ax_main.set_xlabel("Timestamp")
+                ax_main.set_ylabel("Metric value")
+                buf_main = BytesIO()
+                plt.savefig(buf_main, format="png", bbox_inches="tight")
+                buf_main.seek(0)
+                img_base64_main = base64.b64encode(buf_main.read()).decode('utf-8')
+                plt.close(fig_main)
 
-                ax.set_title(f"Anomaly at {ts} - Trace {trace_id}")
-                ax.legend(loc='upper right')
-                ax.set_xlabel("Timestamp")
-                ax.set_ylabel("Metric value")
+                # Plot forecast (seulement la métrique choisie)
+                last_date = historical_data.index[-1]
+                freq = historical_data.index.inferred_freq or pd.infer_freq(historical_data.index)
+                if freq is None:
+                    freq = 'T'  # Par défaut à la minute si non détectée
+                forecast_dates = pd.date_range(start=last_date, periods=len(forecast_values) + 1, freq=freq)[1:]
 
-                buf = BytesIO()
-                plt.savefig(buf, format="png", bbox_inches="tight")
-                buf.seek(0)
-                img_base64 = base64.b64encode(buf.read()).decode('utf-8')
-                plt.close()
+                fig_forecast, ax_forecast = plt.subplots(figsize=(10, 4))
+                ax_forecast.plot(historical_data.index, historical_data.values, label="Historique")
+                ax_forecast.plot(forecast_dates, forecast_values, marker='o', color='blue', label=f"Prévision {metric_to_forecast}")
+                ax_forecast.set_title(f"Prévision de la métrique {metric_to_forecast} - Trace {trace_id}")
+                ax_forecast.set_xlabel("Timestamp")
+                ax_forecast.set_ylabel("Valeur")
+                ax_forecast.legend()
+                buf_forecast = BytesIO()
+                plt.savefig(buf_forecast, format="png", bbox_inches="tight")
+                buf_forecast.seek(0)
+                img_base64_forecast = base64.b64encode(buf_forecast.read()).decode('utf-8')
+                plt.close(fig_forecast)
 
                 explanation = generate_llm_explanation(
                     timestamp=ts,
@@ -186,8 +219,13 @@ def detect_fused_anomaly():
                     "score_trace": score_trace,
                     "score_metric": score_metric,
                     "fused_score": fused_score,
-                    "plot_base64": img_base64,
-                    "explanation": explanation
+                    "plot_base64": img_base64_main,
+                    "explanation": explanation,
+                    "forecast": {
+                        "metric": metric_to_forecast,
+                        "predicted_values": forecast_values
+                    },
+                    "forecast_plot_base64": img_base64_forecast
                 })
 
         return jsonify({"anomalies": results})
