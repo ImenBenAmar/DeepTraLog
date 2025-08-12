@@ -196,7 +196,7 @@ pip install -r requirements.txt
 - ![Exemple interface Streamlit](./output/interface.png)  
   *Interface utilisateur pour l'analyse et l'explication des anomalies.*
 
-  - ![Exemple detection d'anomalie](./output/interface.png)  
+  - ![Exemple detection d'anomalie](./output/anomalie_detec.png)  
   *Interface utilisateur pour detection d'anomalie.*
 
   - ![Exemple explication d'anomalie](./output/explication.png)  
