@@ -117,11 +117,18 @@ Ouvrez ensuite le lien local affiché dans votre navigateur.
 
 ---
 
-## 🤖 Explication automatique par LLM
+## 🤖 Explication automatique par LLM & Prévision des métriques
 
-Pour chaque anomalie détectée, une explication détaillée et une recommandation technique sont générées automatiquement par un LLM (Mistral) via l'API.  
-- Le prompt inclut le service, les scores, les métriques système, et demande une cause probable + une action corrective concrète.
-- Le LLM utilisé est `mistral-medium` (clé API à renseigner dans `.env`).
+Pour chaque anomalie détectée, deux IA sont utilisées :
+
+- **Explication et recommandation par LLM (Mistral-medium)**  
+  Un LLM (Mistral-medium) génère automatiquement une explication détaillée de la cause probable de l'anomalie et propose une recommandation technique concrète pour la corriger.  
+  Le prompt inclut le service, les scores, les métriques système, et la réponse est affichée dans l'interface Streamlit.  
+  > **Configuration** : renseignez votre clé API Mistral dans le fichier `.env` (`MISTRAL_API_KEY=...`).
+
+- **Prévision des métriques avec Chronos-T5**  
+  Pour chaque anomalie, une prévision (forecast) de la métrique sélectionnée (ex : cpu_r, disk_q, etc.) est générée automatiquement à l'aide du modèle Chronos-T5 small (Amazon).  
+  Cela permet de visualiser l'évolution attendue de la métrique après l'anomalie, directement dans l'interface Streamlit.
 
 ---
 
@@ -179,15 +186,24 @@ pip install -r requirements.txt
 
 ### 🎬 Démonstration vidéo
 
-- [Voir la démo (demo.mp4)](demo.mp4)
+- [Voir la démo (demo.mp4)](output/demo_app.mp4)
 
 ### 📈 Exemples de visualisation
 
 - ![Exemple de graphe DeepTraLog (output.png)](DeepTralog\output.png)  
   *Graphe orienté généré lors du prétraitement DeepTraLog (logs + traces fusionnés, typage des arêtes, couleurs par service).*
 
-- ![Exemple interface Streamlit](./Visualisation/image.png)  
+- ![Exemple interface Streamlit](./output/interface.png)  
   *Interface utilisateur pour l'analyse et l'explication des anomalies.*
+
+  - ![Exemple detection d'anomalie](./output/interface.png)  
+  *Interface utilisateur pour detection d'anomalie.*
+
+  - ![Exemple explication d'anomalie](./output/explication.png)  
+  *Interface utilisateur pour explication d'anomalie .*
+
+ - ![Exemple forcasting métriques](./output/forcasting.png)  
+  *Interface utilisateur pour forcasting métriques .*
 
 - ![Exemple MLflow résultats](./Metrics_detection_multivariate/image.png)  
   *Suivi des scores et modèles via MLflow.*

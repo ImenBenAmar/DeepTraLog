@@ -117,6 +117,8 @@ def detect_fused_anomaly():
         if metric_to_forecast not in feature_names:
             return jsonify({"error": f"metric_to_forecast '{metric_to_forecast}' not valid"}), 400
 
+        include_forecast = req_data.get("include_forecast", True)
+
         metrics_data["timestamp"] = pd.to_datetime(metrics_data["timestamp"], unit='s')
         metrics_data = metrics_data.sort_values("timestamp").set_index("timestamp")
 
@@ -164,10 +166,6 @@ def detect_fused_anomaly():
                 ts = timestamps[i]
                 row = metrics_data.loc[ts] if ts in metrics_data.index else metrics_data.iloc[0]
 
-                # Prévision
-                historical_data = metrics_data[metric_to_forecast].loc[:ts].tail(50)
-                forecast_values = generate_forecast_with_chronos(historical_data, horizon=10)
-
                 # Plot principal (toutes métriques + anomalie)
                 fig_main, ax_main = plt.subplots(figsize=(10, 4))
                 for col in feature_names:
@@ -183,26 +181,6 @@ def detect_fused_anomaly():
                 img_base64_main = base64.b64encode(buf_main.read()).decode('utf-8')
                 plt.close(fig_main)
 
-                # Plot forecast (seulement la métrique choisie)
-                last_date = historical_data.index[-1]
-                freq = historical_data.index.inferred_freq or pd.infer_freq(historical_data.index)
-                if freq is None:
-                    freq = 'T'  # Par défaut à la minute si non détectée
-                forecast_dates = pd.date_range(start=last_date, periods=len(forecast_values) + 1, freq=freq)[1:]
-
-                fig_forecast, ax_forecast = plt.subplots(figsize=(10, 4))
-                ax_forecast.plot(historical_data.index, historical_data.values, label="Historique")
-                ax_forecast.plot(forecast_dates, forecast_values, marker='o', color='blue', label=f"Prévision {metric_to_forecast}")
-                ax_forecast.set_title(f"Prévision de la métrique {metric_to_forecast} - Trace {trace_id}")
-                ax_forecast.set_xlabel("Timestamp")
-                ax_forecast.set_ylabel("Valeur")
-                ax_forecast.legend()
-                buf_forecast = BytesIO()
-                plt.savefig(buf_forecast, format="png", bbox_inches="tight")
-                buf_forecast.seek(0)
-                img_base64_forecast = base64.b64encode(buf_forecast.read()).decode('utf-8')
-                plt.close(fig_forecast)
-
                 explanation = generate_llm_explanation(
                     timestamp=ts,
                     service_name=service_mapping.get(service_ids[i], f"unknown_{service_ids[i]}"),
@@ -212,7 +190,7 @@ def detect_fused_anomaly():
                     metrics_row=row[feature_names]
                 )
 
-                results.append({
+                anomaly_result = {
                     "timestamp": int(ts.timestamp()),
                     "trace_id": trace_id,
                     "service_name": service_mapping.get(service_ids[i], f"unknown_{service_ids[i]}"),
@@ -220,15 +198,97 @@ def detect_fused_anomaly():
                     "score_metric": score_metric,
                     "fused_score": fused_score,
                     "plot_base64": img_base64_main,
-                    "explanation": explanation,
-                    "forecast": {
+                    "explanation": explanation
+                }
+
+                if include_forecast:
+                    # Prévision
+                    historical_data = metrics_data[metric_to_forecast].loc[:ts].tail(50)
+                    forecast_values = generate_forecast_with_chronos(historical_data, horizon=10)
+
+                    # Plot forecast (seulement la métrique choisie)
+                    last_date = historical_data.index[-1]
+                    freq = historical_data.index.inferred_freq or pd.infer_freq(historical_data.index)
+                    if freq is None:
+                        freq = 'T'  # Par défaut à la minute si non détectée
+                    forecast_dates = pd.date_range(start=last_date, periods=len(forecast_values) + 1, freq=freq)[1:]
+
+                    fig_forecast, ax_forecast = plt.subplots(figsize=(8, 3))
+                    ax_forecast.plot(historical_data.index, historical_data.values, label="Historique")
+                    ax_forecast.plot(forecast_dates, forecast_values, marker='o', color='blue', label=f"Prévision {metric_to_forecast}")
+                    ax_forecast.set_title(f"Prévision de la métrique {metric_to_forecast} - Trace {trace_id}")
+                    ax_forecast.set_xlabel("Timestamp")
+                    ax_forecast.set_ylabel("Valeur")
+                    ax_forecast.legend()
+                    buf_forecast = BytesIO()
+                    plt.savefig(buf_forecast, format="png", bbox_inches="tight")
+                    buf_forecast.seek(0)
+                    img_base64_forecast = base64.b64encode(buf_forecast.read()).decode('utf-8')
+                    plt.close(fig_forecast)
+
+                    anomaly_result["forecast"] = {
                         "metric": metric_to_forecast,
                         "predicted_values": forecast_values
-                    },
-                    "forecast_plot_base64": img_base64_forecast
-                })
+                    }
+                    anomaly_result["forecast_plot_base64"] = img_base64_forecast
+
+                results.append(anomaly_result)
 
         return jsonify({"anomalies": results})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/generate_forecast_plot', methods=['POST'])
+def generate_forecast_plot():
+    try:
+        req_data = request.get_json()
+
+        timestamp = req_data["timestamp"]  # int unix timestamp
+        metric_to_forecast = req_data["metric_to_forecast"]
+        metrics_data = pd.DataFrame(req_data["metrics_data"])
+        trace_id = req_data.get("trace_id", "unknown_trace")
+
+        if not all(f in metrics_data.columns for f in ["timestamp"] + feature_names):
+            return jsonify({"error": "Missing required columns in metrics_data"}), 400
+
+        if metric_to_forecast not in feature_names:
+            return jsonify({"error": f"Invalid metric '{metric_to_forecast}'"}), 400
+
+        metrics_data["timestamp"] = pd.to_datetime(metrics_data["timestamp"], unit='s')
+        metrics_data = metrics_data.sort_values("timestamp").set_index("timestamp")
+
+        ts = pd.to_datetime(timestamp, unit='s')
+
+        historical_data = metrics_data[metric_to_forecast].loc[:ts].tail(50)
+        forecast_values = generate_forecast_with_chronos(historical_data, horizon=10)
+
+        last_date = historical_data.index[-1]
+        freq = historical_data.index.inferred_freq or pd.infer_freq(historical_data.index)
+        if freq is None:
+            freq = 'T'  # Par défaut à la minute si non détectée
+        forecast_dates = pd.date_range(start=last_date, periods=len(forecast_values) + 1, freq=freq)[1:]
+
+        fig_forecast, ax_forecast = plt.subplots(figsize=(8, 3))
+        ax_forecast.plot(historical_data.index, historical_data.values, label="Historique")
+        ax_forecast.plot(forecast_dates, forecast_values, marker='o', color='blue', label=f"Prévision {metric_to_forecast}")
+        ax_forecast.set_title(f"Prévision de la métrique {metric_to_forecast} - Trace {trace_id}")
+        ax_forecast.set_xlabel("Timestamp")
+        ax_forecast.set_ylabel("Valeur")
+        ax_forecast.legend()
+        buf_forecast = BytesIO()
+        plt.savefig(buf_forecast, format="png", bbox_inches="tight")
+        buf_forecast.seek(0)
+        img_base64_forecast = base64.b64encode(buf_forecast.read()).decode('utf-8')
+        plt.close(fig_forecast)
+
+        return jsonify({
+            "forecast_plot_base64": img_base64_forecast,
+            "forecast": {
+                "metric": metric_to_forecast,
+                "predicted_values": forecast_values
+            }
+        })
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500

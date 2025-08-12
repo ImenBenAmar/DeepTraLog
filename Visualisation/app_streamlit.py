@@ -76,60 +76,74 @@ if jsons_file and csv_file:
                     st.stop()
                 metrics_data = df_metrics.to_dict(orient="records")
 
-                # Appel API Flask avec metric_to_forecast
+                # Appel API Flask sans forecast
                 api_input = {
                     "graph_data_list": graph_data_list,
                     "metrics_data": metrics_data,
-                    "metric_to_forecast": metric_to_forecast
+                    "metric_to_forecast": metric_to_forecast,
+                    "include_forecast": False
                 }
 
                 response = requests.post("http://127.0.0.1:5000/detect_fused_anomaly", json=api_input, timeout=30)
                 if response.status_code == 200:
                     anomalies = response.json().get("anomalies", [])
+                    st.session_state.anomalies = anomalies
+                    st.session_state.metrics_data = metrics_data
                     if not anomalies:
                         st.info("✅ Aucune anomalie détectée.")
-                    else:
-                        st.header("2️⃣ Résultats des anomalies détectées")
-                        st.markdown(f"**Nombre d'anomalies détectées : {len(anomalies)}**")
-                        for anomaly in anomalies:
-                            with st.container():
-                                st.markdown('<div class="anomaly-card">', unsafe_allow_html=True)
-                                col_left, col_right = st.columns([1, 2])
-                                with col_left:
-                                    st.subheader(f"Trace ID: {anomaly['trace_id']}")
-                                    timestamp = datetime.datetime.fromtimestamp(anomaly['timestamp']).strftime('%Y-%m-%d %H:%M:%S')
-                                    st.markdown(f"""
-                                    **⏱️ Timestamp** : {timestamp}  
-                                    **📛 Service** : {anomaly['service_name']}  
-                                    **📊 Score trace** : {anomaly['score_trace']:.4f}  
-                                    **📊 Score métrique** : {anomaly['score_metric']:.4f}  
-                                    **📊 Score fusionné** : {anomaly['fused_score']:.4f}  
-                                    """)
-
-                                    # Optionnel: afficher les métriques dans l'explication si présentes
-                                    # Ici on récupère l'objet 'metrics_row' qui doit être ajouté côté Flask si souhaité
-                                    # Sinon on ignore
-
-                                with col_right:
-                                    st.image(f"data:image/png;base64,{anomaly['plot_base64']}", use_column_width=True, caption="Visualisation de l'anomalie")
-
-                                st.markdown("**💡 Explication de l'anomalie :**")
-                                st.write(anomaly['explanation'])
-
-                                # Afficher plot forecast séparé
-                                forecast_img = anomaly.get("forecast_plot_base64")
-                                if forecast_img:
-                                    st.markdown(f"**📈 Prévision pour la métrique : {anomaly['forecast']['metric']}**")
-                                    st.image(f"data:image/png;base64,{forecast_img}", use_column_width=True)
-
-                                st.markdown('</div>', unsafe_allow_html=True)
-                                st.markdown("---")
-
                 else:
                     st.error(f"Erreur API : {response.status_code} - {response.text}")
 
             except Exception as e:
                 st.error(f"Erreur lors du traitement : {str(e)}")
+
+if 'anomalies' in st.session_state and st.session_state.anomalies:
+    st.header("2️⃣ Résultats des anomalies détectées")
+    st.markdown(f"**Nombre d'anomalies détectées : {len(st.session_state.anomalies)}**")
+    for anomaly in st.session_state.anomalies:
+        with st.container():
+            st.markdown('<div class="anomaly-card">', unsafe_allow_html=True)
+            col_left, col_right = st.columns([1, 2])
+            with col_left:
+                st.subheader(f"Trace ID: {anomaly['trace_id']}")
+                timestamp = datetime.datetime.fromtimestamp(anomaly['timestamp']).strftime('%Y-%m-%d %H:%M:%S')
+                st.markdown(f"""
+                **⏱️ Timestamp** : {timestamp}  
+                **📛 Service** : {anomaly['service_name']}  
+                **📊 Score trace** : {anomaly['score_trace']:.4f}  
+                **📊 Score métrique** : {anomaly['score_metric']:.4f}  
+                **📊 Score fusionné** : {anomaly['fused_score']:.4f}  
+                """)
+
+            with col_right:
+                st.image(f"data:image/png;base64,{anomaly['plot_base64']}", use_column_width=True, caption="Visualisation de l'anomalie")
+
+            st.markdown("**💡 Explication de l'anomalie :**")
+            st.write(anomaly['explanation'])
+
+            # Générer et afficher le forecast séparément
+            try:
+                forecast_input = {
+                    "timestamp": anomaly['timestamp'],
+                    "metric_to_forecast": metric_to_forecast,
+                    "metrics_data": st.session_state.metrics_data,
+                    "trace_id": anomaly['trace_id']
+                }
+                response_forecast = requests.post("http://127.0.0.1:5000/generate_forecast_plot", json=forecast_input, timeout=30)
+                if response_forecast.status_code == 200:
+                    forecast_data = response_forecast.json()
+                    forecast_img = forecast_data.get("forecast_plot_base64")
+                    if forecast_img:
+                        st.markdown(f"**📈 Prévision pour la métrique : {forecast_data['forecast']['metric']}**")
+                        st.image(f"data:image/png;base64,{forecast_img}", use_column_width=True)
+            except Exception as e:
+                st.warning(f"Erreur lors de la génération de la prévision : {str(e)}")
+
+            st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown("---")
+
+elif 'anomalies' in st.session_state and not st.session_state.anomalies:
+    st.info("✅ Aucune anomalie détectée.")
 else:
     st.warning("⚠️ Veuillez charger les deux fichiers (JSONS et CSV) pour continuer.")
 
