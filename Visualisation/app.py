@@ -210,7 +210,7 @@ def detect_fused_anomaly():
                     last_date = historical_data.index[-1]
                     freq = historical_data.index.inferred_freq or pd.infer_freq(historical_data.index)
                     if freq is None:
-                        freq = 'T'  # Par défaut à la minute si non détectée
+                        freq = 'T' 
                     forecast_dates = pd.date_range(start=last_date, periods=len(forecast_values) + 1, freq=freq)[1:]
 
                     fig_forecast, ax_forecast = plt.subplots(figsize=(8, 3))
@@ -266,7 +266,7 @@ def generate_forecast_plot():
         last_date = historical_data.index[-1]
         freq = historical_data.index.inferred_freq or pd.infer_freq(historical_data.index)
         if freq is None:
-            freq = 'T'  # Par défaut à la minute si non détectée
+            freq = 'T'  
         forecast_dates = pd.date_range(start=last_date, periods=len(forecast_values) + 1, freq=freq)[1:]
 
         fig_forecast, ax_forecast = plt.subplots(figsize=(8, 3))

@@ -149,7 +149,7 @@ Quelques scores typiques obtenus sur les jeux de données testés :
   - LSTM : Precision: 0.76 Recall: 0.72 F1-score: 0.74
   - OmniAI : F1-score: 0.74 Recall: 0.73 Precision: 0.75 AUC: 0.95
   - XGBoost (supervisé) : Precision: 0.90 Recall: 0.97 F1-score: 0.93
-  - Random Forest: Précision : 0.98 Rappel : 0.95 F1-score : 0.97
+  - Random Forest: Précision : 0.98 Recall : 0.95 F1-score : 0.97
 
 - **DeepTraLog (GGNN + DeepSVDD sur graphes logs+traces) :**
    - Précision : 0.968
