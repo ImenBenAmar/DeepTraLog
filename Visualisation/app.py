@@ -85,7 +85,7 @@ Voici une anomalie détectée dans un système microservices sachant que Score t
 - Score fusionné : {fused_score:.4f}
 - Valeurs des métriques système : {metrics_row.to_dict()}
 
-Donne une explication probable de la cause de l’anomalie et propose une recommandation technique concrète pour la corriger directement tous ca dans 2 paragraphe ne depasse pas 600 mots  .
+Donne une explication probable de la cause de l’anomalie et propose une recommandation technique concrète pour la corriger directement tous ca dans 2 paragraphe ne depasse pas 500 mots  .
     """
 
     response = mistral_client.chat.complete(
@@ -95,7 +95,7 @@ Donne une explication probable de la cause de l’anomalie et propose une recomm
             {"role": "user", "content": prompt}
         ],
         temperature=0.3,
-        max_tokens=600
+        max_tokens=500
     )
     return response.choices[0].message.content.strip()
 

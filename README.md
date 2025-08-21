@@ -1,4 +1,4 @@
-# 🔍 DeepTraLog - Détection d'Anomalies et Analyse de Causes par Deep Learning
+# 🔍 Détection d'Anomalies Multi-Sources et Explication Automatique dans les Systèmes Distribués
 
 Ce dépôt propose un pipeline complet pour la détection d'anomalies et l'analyse de causes racines (RCA) dans des systèmes distribués, en s'appuyant sur des techniques de deep learning et de graphes, ainsi que sur des méthodes classiques d'anomaly detection sur métriques.
 
@@ -10,7 +10,7 @@ Ce dépôt propose un pipeline complet pour la détection d'anomalies et l'analy
 |
 ├── cpu_anomaly_detection_univariate/
 │   ├── CPU-anomaly-detection.ipynb      # Détection d'anomalies univariées sur la CPU (méthodes statistiques et ML)
-│   └── anomaly-detection-autoencoder-cpu-util (1).ipynb # Détection d'anomalies CPU par autoencoder (Kaggle)
+│   └── anomaly-detection-autoencoder-cpu-util (1).ipynb # Détection d'anomalies CPU par autoencoder 
 │
 ├── Metrics_detection_multivariate/
 │   └── metrics-anomaly.ipynb            # Détection d'anomalies multivariées sur métriques système (Isolation Forest, Z-score, Autoencoder, LSTM, VAE, etc.)
