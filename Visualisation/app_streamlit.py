@@ -32,8 +32,8 @@ Chargez vos fichiers JSONS (graphes) et CSV (métriques) pour analyser les anoma
 Les résultats incluent des scores, des visualisations et des explications générées par IA.
 """)
 
-feature_names = ['cpu_r', 'load_1', 'load_5', 'mem_u', 'disk_q', 'disk_r',
-                 'disk_w', 'disk_u', 'eth1_fi', 'eth1_fo', 'tcp_timeouts']
+feature_names = ['disk_u','cpu_r', 'load_1', 'load_5', 'mem_u', 'disk_q', 'disk_r',
+                 'disk_w', 'eth1_fi', 'eth1_fo', 'tcp_timeouts']
 
 with st.sidebar:
     st.header("📋 Instructions")
