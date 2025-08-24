@@ -186,7 +186,7 @@ pip install -r requirements.txt
 
 ### 🎬 Démonstration vidéo
 
-- [Voir la démo (demo.mp4)](output/demo_app.mp4)
+- [Voir la démo (demo_finale.mp4)](output/demo_finale.mp4)
 
 ### 📈 Exemples de visualisation
 
