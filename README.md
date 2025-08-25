@@ -173,7 +173,7 @@ Quelques scores typiques obtenus sur les jeux de données testés :
 - **Flask** (API backend)
 - **MLflow** (tracking et comparaison des modèles)
 - **MistralAI** (LLM pour explication automatique)
-- **pandas**, **numpy**, **matplotlib**, **seaborn**, **plotly** (data science/visualisation)
+- **pandas**, **numpy**, **matplotlib**, **seaborn** (data science/visualisation)
 
 ### Installation des dépendances
 
@@ -190,7 +190,7 @@ pip install -r requirements.txt
 
 ### 📈 Exemples de visualisation
 
-- ![Exemple de graphe DeepTraLog (output.png)](DeepTralog\output.png)  
+- ![Exemple de graphe DeepTraLog (output.png)](output/output.png)  
   *Graphe orienté généré lors du prétraitement DeepTraLog (logs + traces fusionnés, typage des arêtes, couleurs par service).*
 
 - ![Exemple interface Streamlit](./output/interface.png)  
